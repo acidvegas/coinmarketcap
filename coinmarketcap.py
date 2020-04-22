@@ -6,6 +6,15 @@ import json
 import time
 import zlib
 
+# Find a better way to do this...
+def replace_nulls(json_elem):
+	if isinstance(json_elem, list):
+		return [replace_nulls(elem) for elem in json_elem]
+	elif isinstance(json_elem, dict):
+		return {key: replace_nulls(value) for key, value in json_elem.items()}
+	else:
+		return '0' if json_elem is None else json_elem
+
 class CoinMarketCap(object):
 	def __init__(self, api_key):
 		self.api_key = api_key
@@ -39,7 +48,7 @@ class CoinMarketCap(object):
 		if time.time() - self.last['ticker'] < 300:
 			return self.cache['ticker']
 		else:
-			data = self._api('cryptocurrency/listings/latest?limit=5000')
+			data = replace_nulls(self._api('cryptocurrency/listings/latest?limit=5000'))
 			self.cache['ticker'] = dict()
 			for item in data:
 				self.cache['ticker'][item['id']] = {
