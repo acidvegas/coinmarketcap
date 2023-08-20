@@ -6,14 +6,7 @@ import json
 import time
 import zlib
 
-# Find a better way to do this...
-def replace_nulls(json_elem):
-	if isinstance(json_elem, list):
-		return [replace_nulls(elem) for elem in json_elem]
-	elif isinstance(json_elem, dict):
-		return {key: replace_nulls(value) for key, value in json_elem.items()}
-	else:
-		return '0' if json_elem is None else json_elem
+CACHE_EXPIRY_TIME = 300
 
 class CoinMarketCap(object):
 	def __init__(self, api_key):
@@ -22,14 +15,19 @@ class CoinMarketCap(object):
 		self.last    = {'global':0     , 'ticker':0     }
 
 	def _api(self, _endpoint):
-		conn = http.client.HTTPSConnection('pro-api.coinmarketcap.com', timeout=15)
-		conn.request('GET', '/v1/' + _endpoint, headers={'Accept':'application/json', 'Accept-Encoding':'deflate, gzip', 'X-CMC_PRO_API_KEY':self.api_key})
-		response = zlib.decompress(conn.getresponse().read(), 16+zlib.MAX_WBITS).decode('utf-8').replace(': null', ': "0"')
-		conn.close()
-		return json.loads(response)['data']
+		'''Make a request to the CoinMarketCap API.'''
+		with http.client.HTTPSConnection('pro-api.coinmarketcap.com', timeout=15) as conn:
+			conn.request('GET', f'/v1/{_endpoint}', headers={'Accept':'application/json', 'Accept-Encoding':'deflate, gzip', 'X-CMC_PRO_API_KEY':self.api_key})
+			response = conn.getresponse()
+			if response.getheader('Content-Encoding') == 'gzip':
+				content = zlib.decompress(response.read(), 16+zlib.MAX_WBITS).decode('utf-8')
+			else:
+				content = response.read().decode('utf-8')
+		return json.loads(content.replace(': null', ': "0"'))['data']
 
 	def _global(self):
-		if time.time() - self.last['global'] < 300:
+		'''Get global market data.'''
+		if time.time() - self.last['global'] < CACHE_EXPIRY_TIME:
 			return self.cache['global']
 		else:
 			data = self._api('global-metrics/quotes/latest')
@@ -45,10 +43,11 @@ class CoinMarketCap(object):
 			return self.cache['global']
 
 	def _ticker(self):
-		if time.time() - self.last['ticker'] < 300:
+		'''Get ticker data.'''
+		if time.time() - self.last['ticker'] < CACHE_EXPIRY_TIME:
 			return self.cache['ticker']
 		else:
-			data = replace_nulls(self._api('cryptocurrency/listings/latest?limit=5000'))
+			data = self._api('cryptocurrency/listings/latest?limit=5000')
 			self.cache['ticker'] = dict()
 			for item in data:
 				self.cache['ticker'][item['id']] = {

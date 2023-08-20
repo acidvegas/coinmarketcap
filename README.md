@@ -2,7 +2,7 @@
 > A Python class for the API on [CoinMarketCap](https://coinmarketcap.com)
 
 ## Requirements
-* [Python](https://www.python.org/downloads/) *(**Note:** This script was developed to be used with the latest version of Python)*
+* [Python](https://www.python.org/downloads/)
 
 ## API Documentation
 - [CoinMarketCap API Documentation](https://coinmarketcap.com/api/documentation/v1/)
@@ -44,7 +44,7 @@ for item in ticker_data:
     input('') # Press enter to continue...
 ```
 
-## Mirrors
-- [acid.vegas](https://acid.vegas/coinmarketcap) *(main)*
-- [GitHub](https://github.com/acidvegas/coinmarketcap)
-- [GitLab](https://gitlab.com/acidvegas/coinmarketcap)
+___
+
+###### Mirrors
+[acid.vegas](https://git.acid.vegas/coinmarketcap) • [GitHub](https://github.com/acidvegas/coinmarketcap) • [GitLab](https://gitlab.com/acidvegas/coinmarketcap) • [SuperNETs](https://git.supernets.org/acidvegas/coinmarketcap)
